@@ -8,7 +8,7 @@ from datetime import datetime
 import uuid
 
 # Database connection details
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://neondb_owner:npg_dQxI6bev8yCq@ep-wispy-salad-adnoqxlk-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require")
+DATABASE_URL = os.getenv("DATABASE_URL", "your database url")
 
 # Create a sync engine to connect to Neon database
 engine = create_engine(DATABASE_URL.replace("postgresql://", "postgresql+psycopg2://"))
