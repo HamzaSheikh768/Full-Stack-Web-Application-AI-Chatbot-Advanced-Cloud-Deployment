@@ -1,283 +1,324 @@
-# TASKAPP - Professional Full-Stack Todo Application with AI Integration
+# Full-Stack Web Application with AI Chatbot - Advanced Cloud Deployment
 
-A professional full-stack todo application with Next.js frontend featuring public access without authentication, local storage persistence, dark-first theme with blue accents, AI-powered task management, and comprehensive task management features.
+A professional full-stack todo application with Next.js frontend featuring public access without authentication, local storage persistence, dark-first theme with blue accents, AI-powered task management, and comprehensive task management features. This project implements an advanced cloud-native architecture with event-driven microservices, Dapr sidecars, and deployment to managed Kubernetes services.
 
-## Kubernetes Deployment with AI Tools
+## Table of Contents
+- [Overview](#overview)
+- [Architecture](#architecture)
+- [Tech Stack](#tech-stack)
+- [Monorepo Structure](#monorepo-structure)
+- [Features](#features)
+- [Prerequisites](#prerequisites)
+- [Setup Instructions](#setup-instructions)
+- [Development Workflow](#development-workflow)
+- [Deployment](#deployment)
+- [AI Chatbot API](#ai-chatbot-api)
+- [MCP Tools](#mcp-tools)
+- [Testing](#testing)
+- [Contributing](#contributing)
 
-This project demonstrates an AI-native DevOps approach using AI tools for containerization, orchestration, and operations.
+## Overview
 
-### Prerequisites
-
-- Windows 10/11 (x64)
-- Administrative access for installing packages
-- At least 16GB RAM (8GB allocated to Minikube)
-- At least 4 CPU cores
-- Internet connection for initial setup
-- Virtualization enabled in BIOS/UEFI
-
-### AI-Assisted Deployment Process
-
-#### 1. Install AI-DevOps Toolchain
-
-First, install the required tools using the provided scripts:
-
-```powershell
-# Run as Administrator
-.\scripts\install-choco-packages.ps1
-.\scripts\install-pip-packages.ps1
-```
-
-#### 2. Enable Gordon (Docker AI Agent)
-
-Enable Gordon in Docker Desktop settings:
-- Open Docker Desktop
-- Go to Settings → Features in development
-- Enable "Gordon (AI features)"
-- Restart Docker Desktop
-
-#### 3. Verify Toolchain
-
-Verify all tools are accessible:
-
-```powershell
-.\scripts\verify-tools.ps1
-.\scripts\validate-env.ps1
-```
-
-#### 4. Start Minikube Cluster
-
-Start a Minikube cluster with appropriate resources:
-
-```bash
-minikube start --driver=docker --cpus=4 --memory=8192
-```
-
-#### 5. Generate Dockerfiles with Gordon
-
-Use Gordon to generate optimized Dockerfiles for both frontend and backend:
-
-```bash
-# Navigate to frontend directory
-cd frontend
-docker ai "Create an optimized Dockerfile for a Next.js frontend application in the current directory"
-
-# Navigate to backend directory
-cd ../backend
-docker ai "Create an optimized Dockerfile for a FastAPI backend application in the current directory with proper Python dependencies management"
-```
-
-#### 6. Build Container Images
-
-Use Gordon to build container images:
-
-```bash
-# From backend directory
-docker ai "Build a Docker image for todo-backend from the current directory with proper tagging"
-
-# From frontend directory
-cd ../frontend
-docker ai "Build a Docker image for todo-frontend from the current directory with proper tagging"
-```
-
-#### 7. Generate Helm Charts with kubectl-ai
-
-Use kubectl-ai to generate Helm charts:
-
-```bash
-kubectl-ai "create a Helm chart for todo frontend with deployment and service, using todo-frontend image"
-kubectl-ai "create a Helm chart for todo backend with deployment and service, using todo-backend image"
-```
-
-#### 8. Deploy to Minikube
-
-Install the Helm charts to your Minikube cluster:
-
-```bash
-helm install todo-frontend ./k8s/charts/frontend
-helm install todo-backend ./k8s/charts/backend
-```
-
-#### 9. Access the Application
-
-Get the frontend service URL:
-
-```bash
-minikube service todo-frontend --url
-```
-
-#### 10. AI-Assisted Operations
-
-Use AI tools for ongoing operations:
-
-```bash
-# Scale deployments
-kubectl-ai "scale the frontend deployment to 2 replicas"
-
-# Analyze cluster health
-kagent "analyze the cluster health"
-
-# Troubleshoot issues
-kubectl-ai "why are the pods failing"
-```
-
-### Validation
-
-Run the validation script to ensure everything is working:
-
-```bash
-.\scripts\validate-deployment.sh
-```
-
-### Cleanup
-
-To stop and delete the Minikube cluster:
-
-```bash
-minikube stop
-minikube delete
-```
+This project demonstrates a modern, cloud-native approach to building full-stack applications with AI integration. It follows a spec-driven development methodology using Claude Code and implements advanced features like event-driven architecture, distributed tracing, and microservices orchestration.
 
 ## Architecture
 
-The deployment follows an AI-native DevOps approach:
+The application follows a cloud-native microservices architecture with the following components:
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                Phase III Application                        │
-│  ┌─────────────┐     ┌─────────────┐                      │
-│  │   Frontend  │     │   Backend   │                      │
-│  │ (Next.js)   │     │ (FastAPI)   │                      │
-│  └─────────────┘     └─────────────┘                      │
-└─────────────────┬───────────────────────────────────────────┘
-                  │
-┌─────────────────▼───────────────────────────────────────────┐
-│                Docker AI (Gordon)                           │
-│  ┌─────────────────────────┐  ┌─────────────────────────┐  │
-│  │ Frontend Dockerfile     │  │ Backend Dockerfile      │  │
-│  │ (AI-generated)          │  │ (AI-generated)          │  │
-│  └─────────────────────────┘  └─────────────────────────┘  │
-│  ┌─────────────────────────┐  ┌─────────────────────────┐  │
-│  │ todo-frontend image     │  │ todo-backend image      │  │
-│  │ (AI-built)              │  │ (AI-built)              │  │
-│  └─────────────────────────┘  └─────────────────────────┘  │
-└─────────────────┬───────────────────────────────────────────┘
-                  │
-┌─────────────────▼───────────────────────────────────────────┐
-│              Helm Charts (AI-generated)                     │
-│  ┌─────────────────────────┐  ┌─────────────────────────┐  │
-│  │ frontend-chart          │  │ backend-chart           │  │
-│  │ (via kubectl-ai)        │  │ (via kubectl-ai)      │  │
-│  │ - Deployment            │  │ - Deployment            │  │
-│  │ - Service               │  │ - Service               │  │
-│  │ - ConfigMap             │  │ - ConfigMap             │  │
-│  └─────────────────────────┘  └─────────────────────────┘  │
-└─────────────────┬───────────────────────────────────────────┘
-                  │
-┌─────────────────▼───────────────────────────────────────────┐
-│              Kubernetes (Minikube)                          │
-│  ┌─────────────────────────────────────────────────────────┐│
-│  │ Cluster: 4 CPU, 8GB RAM                                 ││
-│  │ Pods: todo-frontend, todo-backend                       ││
-│  │ Services: NodePort                                      ││
-│  └─────────────────────────────────────────────────────────┘│
-└─────────────────┬───────────────────────────────────────────┘
-                  │
-┌─────────────────▼───────────────────────────────────────────┐
-│            AI Operations Layer                              │
-│  ┌─────────────────────────┐  ┌─────────────────────────┐  │
-│  │ kubectl-ai              │  │ kagent                  │  │
-│  │ (natural language      │  │ (cluster analysis &     │  │
-│  │  operations)           │  │  optimization)         │  │
-│  └─────────────────────────┘  └─────────────────────────┘  │
-└─────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                            Cloud-Native Architecture                            │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│  ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐              │
+│  │   Frontend      │    │   Backend       │    │   AI Agent      │              │
+│  │   (Next.js)     │    │   (FastAPI)     │    │   (OpenAI)      │              │
+│  │                 │    │                 │    │                 │              │
+│  │  ┌───────────┐  │    │  ┌───────────┐  │    │  ┌───────────┐  │              │
+│  │  │ Chat UI   │  │    │  │ Chat API  │  │    │  │ MCP Tools │  │              │
+│  │  │           │  │    │  │           │  │    │  │           │  │              │
+│  │  └───────────┘  │    │  └───────────┘  │    │  └───────────┘  │              │
+│  └─────────────────┘    └─────────────────┘    └─────────────────┘              │
+│                                    │                                           │
+│                                    ▼                                           │
+│                    ┌─────────────────────────────────────────────────────────┐ │
+│                    │                Dapr Sidecars                          │ │
+│                    │  ┌─────────────┐ ┌─────────────┐ ┌─────────────────┐  │ │
+│                    │  │ State Store │ │ Pub/Sub     │ │ Service Invoke│  │ │
+│                    │  │ (PostgreSQL)│ │ (Kafka)     │ │ (HTTP/gRPC)   │  │ │
+│                    │  └─────────────┘ └─────────────┘ └─────────────────┘  │ │
+│                    └─────────────────────────────────────────────────────────┘ │
+│                                    │                                           │
+│                                    ▼                                           │
+│                    ┌─────────────────────────────────────────────────────────┐ │
+│                    │              Event-Driven Services                    │ │
+│                    │  ┌─────────────┐ ┌─────────────┐ ┌─────────────────┐  │ │
+│                    │  │ Task Mgmt   │ │ Notification│ │ Recurring Task  │  │ │
+│                    │  │ Service     │ │ Service     │ │ Service         │  │ │
+│                    │  └─────────────┘ └─────────────┘ └─────────────────┘  │ │
+│                    └─────────────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────────────────────────┘
 ```
-
-## Security Considerations
-
-- Gordon follows security best practices by default (non-root users, minimal base images)
-- RBAC configuration for service accounts
-- Network policies to control traffic between services
-- Secrets management for sensitive data
-- Minikube runs in isolated environment
-- Local-only deployment reduces attack vectors
-
-## Troubleshooting
-
-Refer to the documentation in the `docs/` directory for detailed troubleshooting guides:
-
-- [Tool Verification Procedures](docs/tool-verification.md)
-- [Docker AI (Gordon) Best Practices](docs/gordon-best-practices.md)
-- [Helm Generation Process](docs/helm-generation.md)
-- [AI Operations Guide](docs/ai-ops.md)
-- [Installation Checklist](docs/installation-checklist.md)
-
-## Original Application Features
-
-A professional full-stack todo application with Next.js frontend featuring public access without authentication, local storage persistence, dark-first theme with blue accents, AI-powered task management, and comprehensive task management features.
-
-## Features
-
-- 🚀 Next.js 16+ with App Router for modern web development
-- 🔓 Public access - no login required to use the application
-- 💾 Local storage persistence for tasks and preferences
-- 🎨 Dark-first theme with #000000 background, #2563EB blue accents, and #FFFFFF white text
-- 🌙 Smooth dark/light theme switching with next-themes
-- 📱 Responsive design for all device sizes
-- ♿ WCAG 2.1 AA accessibility compliant
-- 🔁 Recurring tasks with daily/weekly patterns
-- 🏷️ Tag-based task categorization
-- 📊 Task filtering, sorting, and search capabilities
-- ✨ Smooth animations and loading states
 
 ## Tech Stack
 
-- **Frontend**: Next.js 16+, React, TypeScript, Tailwind CSS, next-themes
+### Frontend
+- **Framework**: Next.js 16+ with App Router
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS with custom dark-first theme
 - **State Management**: Zustand with persistence
 - **Animations**: Framer Motion
 - **Drag & Drop**: dnd-kit
-- **Styling**: Tailwind CSS with custom dark-first theme
+- **UI Components**: Custom-built with accessibility in mind
 
-## Prerequisites
+### Backend
+- **Framework**: Python FastAPI
+- **ORM**: SQLModel (SQLAlchemy + Pydantic)
+- **Database**: Neon Serverless PostgreSQL
+- **Authentication**: Better Auth (JWT tokens)
+- **AI Framework**: OpenAI Agents SDK
+- **MCP Server**: Official MCP SDK
 
-- Node.js v20+
-- Git
+### Cloud-Native Infrastructure
+- **Event Streaming**: Apache Kafka / Redpanda
+- **Service Mesh**: Dapr (Distributed Application Runtime)
+- **Orchestration**: Kubernetes (Minikube → Cloud)
+- **Containerization**: Docker
+- **Package Management**: Helm Charts
+- **Monitoring**: Distributed tracing, structured logging
 
-## Setup Instructions
+### AI & Automation
+- **AI Agent**: OpenAI GPT models
+- **MCP Tools**: Model Context Protocol for task management
+- **AI Ops**: kubectl-ai, kagent for cluster management
+- **AI Containerization**: Gordon (Docker AI) for Dockerfile generation
 
-1. Clone the repository
-2. Install dependencies:
-   ```bash
-   # Frontend
-   cd frontend
-   npm install
-   ```
-3. Run the application:
-   ```bash
-   # Frontend
-   cd frontend
-   npm run dev
-   ```
-
-## Project Structure
+## Monorepo Structure
 
 ```
-monorepo root
-├── .env                          # Environment variables
-├── .env.example                  # Example environment variables
+monorepo root/
+├── .specify/                     # Spec-Driven Development tools
+│   ├── memory/                   # Project constitution and principles
+│   ├── templates/                # PHR and ADR templates
+│   └── scripts/                  # Automation scripts
+├── specs/                        # Feature specifications
+│   ├── todo/                     # Todo feature specs
+│   │   ├── spec.md               # Feature requirements
+│   │   ├── plan.md               # Architecture decisions
+│   │   └── tasks.md              # Testable tasks
+│   └── ...
 ├── frontend/                     # Next.js frontend application
 │   ├── app/                      # App Router pages
 │   ├── components/               # React components
 │   ├── lib/                      # Utilities and store
 │   ├── styles/                   # Global styles
-│   └── ...
-├── backend/                      # FastAPI backend with AI Chatbot
+│   ├── hooks/                    # Custom React hooks
+│   ├── types/                    # TypeScript type definitions
+│   ├── public/                   # Static assets
+│   ├── package.json              # Frontend dependencies
+│   └── next.config.js            # Next.js configuration
+├── backend/                      # Python FastAPI backend
 │   ├── src/                      # Source code
 │   │   ├── main.py               # Application entry point
 │   │   ├── api/                  # API route definitions
 │   │   ├── models/               # SQLModel database models
 │   │   ├── mcp/                  # Model Context Protocol tools
-│   │   └── agent/                # AI Agent implementation
-│   └── ...
+│   │   ├── agent/                # AI Agent implementation
+│   │   ├── services/             # Business logic services
+│   │   ├── utils/                # Utility functions
+│   │   └── config/               # Configuration files
+│   ├── requirements.txt          # Python dependencies
+│   ├── alembic/                  # Database migration files
+│   └── tests/                    # Backend tests
+├── k8s/                          # Kubernetes manifests
+│   ├── base/                     # Base configurations
+│   ├── overlays/                 # Environment-specific configs
+│   └── charts/                   # Helm charts
+├── dapr/                         # Dapr component configurations
+│   ├── components/               # Component definitions
+│   └── configs/                  # Configuration files
+├── kafka/                        # Kafka schemas and configurations
+│   ├── schemas/                  # Avro/JSON schemas
+│   └── topics/                   # Topic definitions
+├── scripts/                      # Automation and utility scripts
+├── docs/                         # Documentation
+├── history/                      # Historical records
+│   ├── prompts/                  # Prompt History Records
+│   └── adr/                      # Architecture Decision Records
+├── .env.example                  # Example environment variables
+├── docker-compose.yml            # Local development containers
+├── Dockerfile.frontend           # Frontend container build
+├── Dockerfile.backend            # Backend container build
+├── README.md                     # This file
+└── ...
+```
+
+## Features
+
+### Basic Features
+- Add Task – Create new todo items
+- Delete Task – Remove tasks from the list
+- Update Task – Modify existing task details
+- View Task List – Display all tasks
+- Mark as Complete – Toggle task completion status
+
+### Intermediate Features
+- Priorities & Tags/Categories – Assign levels (high/medium/low) or labels (work/home)
+- Search & Filter – Search by keyword; filter by status, priority, or date
+- Sort Tasks – Reorder by due date, priority, or alphabetically
+
+### Advanced Features
+- Recurring Tasks – Auto-reschedule repeating tasks
+- Due Dates & Time Reminders – Set deadlines with date/time pickers; browser notifications
+- Event-Driven Architecture – Using Kafka/Redpanda for task state changes
+- Dapr Integration – Sidecar pattern for state, pub/sub, and service invocation
+- Cloud-Native Deployment – Kubernetes-ready with Helm charts
+
+### AI-Powered Features
+- Natural Language Processing – Understand user commands in plain English
+- Task Management via Chat – Add, update, complete tasks through conversation
+- Smart Suggestions – AI-powered recommendations based on task patterns
+- Contextual Understanding – Maintain conversation context across interactions
+
+## Prerequisites
+
+### Local Development
+- Node.js v20+
+- Python 3.11+
+- Docker Desktop with Kubernetes enabled
+- Git
+- npm or yarn
+
+### Cloud Deployment
+- Kubernetes cluster (Minikube, DigitalOcean DOKS, AKS, GKE, or OKE)
+- Helm 3+
+- Dapr CLI
+- kubectl
+
+### AI Services
+- OpenAI API key
+- (Optional) Cohere API key for alternative AI processing
+
+## Setup Instructions
+
+### 1. Clone the Repository
+```bash
+git clone https://github.com/HamzaSheikh768/Full-Stack-Web-Application-AI-Chatbot-Advanced-Cloud-Deployment.git
+cd Full-Stack-Web-Application-AI-Chatbot-Advanced-Cloud-Deployment
+```
+
+### 2. Install Dependencies
+
+#### Frontend Setup
+```bash
+# Navigate to frontend directory
+cd frontend
+
+# Install dependencies
+npm install
+
+# Copy environment variables
+cp .env.example .env.local
+
+# Update environment variables as needed
+```
+
+#### Backend Setup
+```bash
+# Navigate to backend directory
+cd ../backend
+
+# Create virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Copy environment variables
+cp .env.example .env
+
+# Update environment variables as needed
+```
+
+### 3. Run the Application Locally
+
+#### Option A: Separate Terminals
+```bash
+# Terminal 1: Start frontend
+cd frontend
+npm run dev
+
+# Terminal 2: Start backend
+cd backend
+uvicorn src.main:app --reload
+```
+
+#### Option B: Using Docker Compose
+```bash
+# From the project root
+docker-compose up --build
+```
+
+### 4. Access the Application
+- Frontend: http://localhost:3000
+- Backend API: http://localhost:8000
+- Dapr dashboard: http://localhost:8080 (if running Dapr locally)
+
+## Development Workflow
+
+### Spec-Driven Development
+This project follows a spec-driven development approach:
+
+1. **Specify**: Define requirements in `specs/<feature>/spec.md`
+2. **Plan**: Document architecture decisions in `specs/<feature>/plan.md`
+3. **Tasks**: Break down work into testable tasks in `specs/<feature>/tasks.md`
+4. **Implement**: Develop features following the specifications
+
+### Creating New Features
+1. Create a new directory in `specs/` for your feature
+2. Write the specification (`spec.md`) with user stories and acceptance criteria
+3. Create the architectural plan (`plan.md`) with technology choices and data models
+4. Break down the work into tasks (`tasks.md`) with test cases
+5. Implement the feature following the specifications
+6. Create Prompt History Records (PHRs) for significant changes
+7. Document architectural decisions as ADRs when needed
+
+### Code Standards
+- Follow the principles outlined in `.specify/memory/constitution.md`
+- Write comprehensive tests for all new functionality
+- Maintain consistent code style using project linters/formatters
+- Document public APIs and complex business logic
+- Use meaningful commit messages following conventional commits
+
+## Deployment
+
+### Local Kubernetes (Minikube)
+```bash
+# Start Minikube
+minikube start --driver=docker --cpus=4 --memory=8192
+
+# Install Dapr
+dapr init -k
+
+# Deploy using Helm
+helm install todo-frontend ./k8s/charts/frontend
+helm install todo-backend ./k8s/charts/backend
+```
+
+### Cloud Deployment
+For cloud deployment to DigitalOcean DOKS, AKS, GKE, or OKE:
+
+1. Configure your cloud provider's CLI tools
+2. Create a Kubernetes cluster
+3. Install Dapr in the cluster
+4. Update Helm values for your environment
+5. Deploy using Helm
+
+```bash
+# Example for DigitalOcean
+doctl kubernetes cluster kubeconfig save <cluster-name>
+helm install todo-frontend ./k8s/charts/frontend -f k8s/values/prod.yaml
+helm install todo-backend ./k8s/charts/backend -f k8s/values/prod.yaml
 ```
 
 ## AI Chatbot API
@@ -317,10 +358,93 @@ The AI assistant can handle various task management commands:
 - **Delete tasks**: "Delete task 1", "Remove the meeting task"
 - **Update tasks**: "Change task 1 to 'Call dad'", "Update the grocery task description"
 
-### Environment Variables
+## MCP Tools
 
-Make sure to set the following environment variables:
+The application implements Model Context Protocol (MCP) tools for AI interaction:
 
-- `COHERE_API_KEY`: Your Cohere API key for AI processing
-- `DATABASE_URL`: Database connection string
-- `BETTER_AUTH_SECRET`: Secret for authentication
+### Tool: add_task
+- **Purpose**: Create a new task
+- **Parameters**: user_id (required), title (required), description (optional)
+- **Returns**: task_id, status, title
+
+### Tool: list_tasks
+- **Purpose**: Retrieve tasks from the list
+- **Parameters**: user_id (required), status (optional: "all", "pending", "completed")
+- **Returns**: Array of task objects
+
+### Tool: complete_task
+- **Purpose**: Mark a task as complete
+- **Parameters**: user_id (required), task_id (required)
+- **Returns**: task_id, status, title
+
+### Tool: delete_task
+- **Purpose**: Remove a task from the list
+- **Parameters**: user_id (required), task_id (required)
+- **Returns**: task_id, status, title
+
+### Tool: update_task
+- **Purpose**: Modify task title or description
+- **Parameters**: user_id (required), task_id (required), title (optional), description (optional)
+- **Returns**: task_id, status, title
+
+## Testing
+
+### Frontend Testing
+```bash
+cd frontend
+npm run test
+npm run test:coverage
+```
+
+### Backend Testing
+```bash
+cd backend
+python -m pytest tests/
+python -m pytest tests/ --cov=src
+```
+
+### End-to-End Testing
+```bash
+# Run integration tests
+npm run test:e2e
+```
+
+## Contributing
+
+We welcome contributions to this project! Please follow these guidelines:
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Follow the spec-driven development approach
+4. Add tests for new functionality
+5. Update documentation as needed
+6. Commit your changes using conventional commits
+7. Push to the branch (`git push origin feature/amazing-feature`)
+8. Open a Pull Request
+
+Before submitting a PR, ensure:
+- All tests pass
+- Code follows project standards
+- Specifications are updated if needed
+- Prompt History Records are created for significant changes
+- Architectural decisions are documented as ADRs if applicable
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Support
+
+If you encounter any issues or have questions:
+
+1. Check the existing [Issues](https://github.com/HamzaSheikh768/Full-Stack-Web-Application-AI-Chatbot-Advanced-Cloud-Deployment/issues)
+2. Search the documentation in the `docs/` directory
+3. Create a new issue with detailed information about your problem
+4. For urgent matters, contact the maintainers directly
+
+## Acknowledgments
+
+- Built with Next.js, FastAPI, and modern web technologies
+- AI capabilities powered by OpenAI
+- Cloud-native infrastructure with Dapr and Kubernetes
+- Spec-driven development methodology with Claude Code
