@@ -1,8 +1,3 @@
 # [Task: T051]
 # [From: specs/1-full-stack-integration/tasks.md §US4, specs/1-full-stack-integration/spec.md §FR-009]
-node_modules
-# Keep environment variables out of version control
-.env
-
-/generated/prisma
 .vercel

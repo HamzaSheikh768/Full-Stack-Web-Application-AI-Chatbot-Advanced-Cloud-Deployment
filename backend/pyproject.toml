@@ -1,3 +1,5 @@
+# [Task: T051]
+# [From: specs/1-full-stack-integration/tasks.md §US4, specs/1-full-stack-integration/spec.md §FR-009]
 [project]
 name = "taskapp-backend"
 version = "0.1.0"
@@ -8,28 +10,34 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "fastapi>=0.115.0",
-    "uvicorn>=0.32.0",
+    "uvicorn[standard]>=0.32.0",
     "sqlmodel>=0.0.22",
-    "pydantic>=2.10.0",
-    "pydantic[email]",
+    "pydantic>=2.10.3",
+    "pydantic-extra-types>=2.9.0",
     "python-multipart>=0.0.20",
     "alembic>=1.14.0",
     "asyncpg>=0.30.0",
-    "psycopg2-binary>=2.9.10",
+    "psycopg2-binary>=2.9.1",
     "python-dotenv>=1.0.1",
-    "pytest>=8.3.4",
     "httpx>=0.28.0",
     "slowapi>=0.1.9",
+    "starlette>=0.37.2,<0.42.0",
     "aiosqlite>=0.20.0",
-    "pytz>=2024.1"
+    "openai>=1.0.0",
+    "openai-agents>=0.6.9",
+    "cohere>=5.20.1",
+    "mcp>=1.11.0",
+    "redis>=5.2.0",
+    "pytz>=2024.1",
+    "bcrypt>=4.0.1"
 ]
 
 [build-system]
 requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
-[tool.uv]
-dev-dependencies = [
+[dependency-groups]
+dev = [
     "pytest>=8.3.4",
     "pytest-asyncio>=0.25.0",
     "black>=24.10.0",

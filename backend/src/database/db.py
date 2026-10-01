@@ -1,10 +1,14 @@
+# [Task: T051]
+# [From: specs/1-full-stack-integration/tasks.md §US4, specs/1-full-stack-integration/spec.md §FR-009]
 from sqlalchemy import create_engine
+from sqlalchemy.engine import make_url
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker, declarative_base
 from sqlalchemy.pool import QueuePool, NullPool
 from sqlmodel import SQLModel
 from contextlib import contextmanager
 import os
+import re
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -13,60 +17,53 @@ load_dotenv()
 # Get database URL from environment variables
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://user:pass@localhost/db")
 
-print(f"DEBUG: DATABASE_URL = {DATABASE_URL}")
+def _strip_query_param(database_url: str, name: str) -> str:
+    cleaned = re.sub(rf"([?&]){name}=[^&]*", "", database_url)
+    cleaned = cleaned.replace("?&", "?").replace("&&", "&")
+    return cleaned.rstrip("?&")
 
-# For async engine with asyncpg for async operations
-# Remove channel_binding parameter as it's not supported by asyncpg
-if "channel_binding=" in DATABASE_URL:
-    import re
-    DATABASE_URL = re.sub(r'[&?]?channel_binding=[^&]*', '', DATABASE_URL)
-    # Ensure proper query separator
-    if "?" not in DATABASE_URL and "&" in DATABASE_URL:
-        DATABASE_URL = DATABASE_URL.replace("&", "?", 1)
 
-# Remove any problematic parameters that might cause DNS resolution issues
-if "?sslmode=require" in DATABASE_URL:
-    # For Neon, we might need to adjust SSL parameters
-    pass
+def _add_query_param(database_url: str, name: str, value: str) -> str:
+    if f"{name}=" in database_url:
+        return database_url
+    separator = "&" if "?" in database_url else "?"
+    return f"{database_url}{separator}{name}={value}"
 
-# Additional fix for Neon connection issues - remove channel_binding if present
-if "channel_binding=" in DATABASE_URL:
-    import re
-    # Remove channel_binding parameter entirely as it's causing SSL issues
-    DATABASE_URL = re.sub(r'[&?]channel_binding=[^&]*', '', DATABASE_URL)
-    # Clean up any double ?? or ?& that might have been created
-    DATABASE_URL = DATABASE_URL.replace('?&', '?').replace('??', '?')
-    # Ensure proper query separator if we removed the first parameter
-    if '?' not in DATABASE_URL and '&' in DATABASE_URL:
-        DATABASE_URL = DATABASE_URL.replace('&', '?', 1)
 
-# Additional fix for Neon - remove unsupported parameters
-if "?options=" in DATABASE_URL:
-    import re
-    DATABASE_URL = re.sub(r'[&?]?options=[^&]*', '', DATABASE_URL)
+def _render_database_url(drivername: str, database_url: str) -> str:
+    url = make_url(database_url).set(drivername=drivername)
+    return url.render_as_string(hide_password=False)
 
-# Replace postgresql:// with postgresql+asyncpg:// for async compatibility
-ASYNC_DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://", 1) if DATABASE_URL.startswith("postgresql://") else DATABASE_URL
-ASYNC_DATABASE_URL = ASYNC_DATABASE_URL.replace("postgres://", "postgresql+asyncpg://", 1) if ASYNC_DATABASE_URL.startswith("postgres://") else ASYNC_DATABASE_URL
 
-# Sync engine for create_db_and_tables (using psycopg2)
-SYNC_DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+psycopg2://", 1) if DATABASE_URL.startswith("postgresql://") else DATABASE_URL
-SYNC_DATABASE_URL = SYNC_DATABASE_URL.replace("postgres://", "postgresql+psycopg2://", 1) if SYNC_DATABASE_URL.startswith("postgres://") else SYNC_DATABASE_URL
+def _build_database_urls(database_url: str) -> tuple[str, str]:
+    # Remove Neon parameters that are not accepted consistently by drivers.
+    cleaned_url = _strip_query_param(database_url, "channel_binding")
+    cleaned_url = _strip_query_param(cleaned_url, "options")
+    driver = make_url(cleaned_url).drivername
 
-# For Neon, we may need to add specific parameters for better compatibility
-if "neon.tech" in ASYNC_DATABASE_URL and "pooler" in ASYNC_DATABASE_URL:
-    # Add Neon-specific parameters if not already present
-    if "sslmode=" not in ASYNC_DATABASE_URL:
-        ASYNC_DATABASE_URL += "&sslmode=require"
-    if "connect_timeout=" not in ASYNC_DATABASE_URL:
-        ASYNC_DATABASE_URL += "&connect_timeout=10"
+    if driver.startswith("postgres") or driver == "postgresql":
+        async_url = _render_database_url("postgresql+asyncpg", cleaned_url)
+        sync_url = _render_database_url("postgresql+psycopg2", cleaned_url)
+    elif driver.startswith("sqlite"):
+        async_url = _render_database_url("sqlite+aiosqlite", cleaned_url)
+        sync_url = _render_database_url("sqlite", cleaned_url)
+    else:
+        async_url = cleaned_url
+        sync_url = cleaned_url
 
-if "neon.tech" in SYNC_DATABASE_URL and "pooler" in SYNC_DATABASE_URL:
-    # Add Neon-specific parameters if not already present
-    if "sslmode=" not in SYNC_DATABASE_URL:
-        SYNC_DATABASE_URL += "&sslmode=require"
-    if "connect_timeout=" not in SYNC_DATABASE_URL:
-        SYNC_DATABASE_URL += "&connect_timeout=10"
+    for url_name, url_value in (("ASYNC", async_url), ("SYNC", sync_url)):
+        if "neon.tech" in url_value and "pooler" in url_value:
+            url_value = _add_query_param(url_value, "sslmode", "require")
+            url_value = _add_query_param(url_value, "connect_timeout", "10")
+        if url_name == "ASYNC":
+            async_url = url_value
+        else:
+            sync_url = url_value
+
+    return async_url, sync_url
+
+
+ASYNC_DATABASE_URL, SYNC_DATABASE_URL = _build_database_urls(DATABASE_URL)
 
 # Create async engine for async operations
 async_engine = create_async_engine(
